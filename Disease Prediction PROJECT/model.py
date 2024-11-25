@@ -1,46 +1,70 @@
+#importing essential libraries
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.metrics import classification_report
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
 
+#reading medical data
 data = pd.read_csv('Disease Prediction PROJECT/medical_data.csv')
 
+# separating the data to be trained and tested from the outcome
 x = data.drop(['Outcome'], axis= 1)
 y = data['Outcome']
+# 1 is DIABETIC and 0 is NON-DIABETIC
 
+# initialisng the standardscaler function
 sc = StandardScaler()
+x = sc.fit_transform(x)
 
+#splitting the dataset
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size= 0.2, stratify= y, random_state= 1)
 
-xv_train = sc.fit_transform(x_train)
-xv_test = sc.transform(x_test)
 
-classifier = SVC(kernel= 'linear')
+# initialising the model
+lr = LogisticRegression()
 
-classifier.fit(xv_train, y_train)
-pred_classifier = classifier.predict(xv_test)
+#training the model
+lr.fit(x_train, y_train)
 
-score = classifier.score(xv_test, y_test)
+# predicting using the test data
+pred_lr = lr.predict(x_test)
 
-print(f'The accuracy of this model is {score}\n\n\n')
-print(f'BELOW IS THE CLASSIFICATION REPORT OF THIS MODEL; \n\n{classification_report(pred_classifier, y_test)}')
+# analysing how our accurate our model is
+pred_accuracy_score = lr.score(x_test, y_test)
 
+print(f'The accuracy of this model is {pred_accuracy_score}\n\n\n')
+print(f'BELOW IS THE CLASSIFICATION REPORT OF THIS MODEL; \n\n{classification_report(pred_lr, y_test)}')
+
+
+# PREDICTIVE SYSTEM
 while True:
     prompt = input('Do you want to check if you are diabetic or not? Y/N  ')
+    # converting prompt into lower case
     prompt = prompt.lower()
+
+    #setting conditions
     if prompt == 'y':
         print('\nInput data in the order as follows;')
         dict = {'Pregnancies': '', 'Glucose': '', 'BloodPressure': '', 'SkinThickness': '', 'Insulin': '', 'BMI': '', 'DiabetesPedigreeFunction': '', 'Age': ''}
+        # giving values to the dictionary keys
         for i in dict:
-            dict[i] = input(f'{i}:')
-
+            dict[i] = float(input(f'{i}:'))
+        # change the dictionary into a dataframe for predicition
         input_data = pd.DataFrame([dict])
 
-        prediction = classifier.predict(input_data)
+    
 
+        std_data = sc.transform(input_data)
+        
+
+        # predicting
+        prediction = lr.predict(std_data)
+        print(prediction)
+
+        #output conditions
         if prediction == 0:
             print('NOT diabetic')
         elif prediction == 1:
